@@ -31,6 +31,7 @@ package edu.illinois.nondex.plugin;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import edu.illinois.nondex.common.Configuration;
 import edu.illinois.nondex.common.ConfigurationDefaults;
@@ -71,12 +72,12 @@ public class DebugTask {
 
         //The test must have failed if it's being debugged, ergo there should exist a failing configuration
         assert (!this.failingConfigurations.isEmpty());
-
+        // Logger.getGlobal().log(Level.INFO, "FAILING CONFIGURATION: " + );
         // I think this entire string result returning is very ugly, and checking success through null-checks
         // TODO(gyori): refactor this crap.
 
         // Try debugging test at different levels, from individual test all the way to entire test suite (being empty)
-        String defaultTest = this.test;                                     // Save the original test wanting to debug
+        String defaultTest = this.test;                                   // Save the original test wanting to debug
         String testClass = this.test.substring(0, this.test.indexOf('#'));  // Test class parsing
         for (String test : new String[]{defaultTest, testClass, ""}) {
             if (test.contains("[")) {
@@ -84,20 +85,22 @@ public class DebugTask {
             } else {
                 this.test = test;
             }
-            String result = this.tryDebugSeeds();
-            if (result != null) {
-                return result;
-            }
-        }
 
+            Optional<String> result = this.tryDebugSeeds();
+            if (result.isPresent()) {
+                return result.get();
+            }
+            
+        }
         return "cannot reproduce. may be flaky due to other causes";
+        
     }
 
-    private String tryDebugSeeds() {
+    private Optional<String> tryDebugSeeds() {
         List<Configuration> debuggedOnes = this.debugWithConfigurations(this.failingConfigurations);
 
         if (debuggedOnes.size() > 0) {
-            return makeResultString(debuggedOnes);
+            return Optional.of(makeResultString(debuggedOnes));
         }
 
         // The seeds that failed with the full test-suite no longer fail
@@ -107,10 +110,10 @@ public class DebugTask {
         debuggedOnes = this.debugWithConfigurations(retryWOtherSeeds);
 
         if (debuggedOnes.size() > 0) {
-            return makeResultString(debuggedOnes);
+            return Optional.of(makeResultString(debuggedOnes));
         }
 
-        return null;
+        return Optional.empty();
     }
 
     private String makeResultString(List<Configuration> debuggedOnes) {
