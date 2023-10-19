@@ -32,6 +32,7 @@ package edu.illinois.nondex.core;
 import edu.illinois.nondex.shuffling.ControlNondeterminism;
 
 import org.junit.Assert;
+import java.util.Arrays;
 
 public abstract class AbstractCollectionTest<T> {
 
@@ -56,16 +57,25 @@ public abstract class AbstractCollectionTest<T> {
         }
     }
 
-    protected void assertEqualstUnordered(String msg, String expected, String actual) {
-        Assert.assertEquals(msg + ": " + expected + " =/= " + actual, expected.length(), actual.length());
-        String trimmed = expected.substring(1, expected.length() - 1);
+    private String[] formatString(String msg) {
+        String trimmed = msg.substring(1, msg.length() - 1);
         String[] elems = trimmed.split(",");
-        // TODO(gyori): fix and make this more robust. It does not check duplicates, substrings, etc.
         for (int i = 0; i < elems.length; i++) {
             elems[i] = elems[i].trim();
-            Assert.assertTrue(msg + ": " + trimmed + " =/= " + actual, actual.contains(elems[i]));
         }
+        return elems;
+    }
 
-
+    protected void assertEqualstUnordered(String msg, String expected, String actual) {
+        String[] actualTokenized = this.formatString(actual);
+        String[] expectedTokenized = this.formatString(expected);
+        
+        Arrays.sort(actualTokenized);
+        Arrays.sort(expectedTokenized);
+        if (Arrays.equals(actualTokenized, expectedTokenized)) {
+            Assert.assertTrue(msg + ": " + expectedTokenized + "=/= " + actualTokenized, true);
+        } else {
+            Assert.fail(msg + ": " + expectedTokenized + "=/= " + actualTokenized);
+        }
     }
 }

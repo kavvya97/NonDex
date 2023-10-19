@@ -149,6 +149,18 @@ public class HashMapTest extends AbstractCollectionTest<Map<Integer, Integer>> {
     }
 
     @Test
+    public void testAssertEqualsUnorderedFailsWithDuplicates() {
+        Map<Integer, Integer> map = this.createResizedDS();
+        try {
+            this.assertEqualstUnordered("the strings are not a permutation of each other",
+            "{0=0, 0=0, 1=1, 2=2, 3=3}", "{0=0, 1=1, 2=2, 3=3}");
+        } catch(AssertionError e) {
+            return;
+        }
+        Assert.fail("The test should have failed but didn't");
+    }
+
+    @Test
     public void testEntrySetParametrized() {
         Map<Integer, Integer> map = this.createResizedDS();
         Set<Entry<Integer, Integer>> entrySet = map.entrySet();
